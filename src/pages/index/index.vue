@@ -49,13 +49,25 @@
               {{i.time}}
             </div>
             <div class="operation">
-              <div class="button" @click="copyText(i.info)">复制文案</div>
+              <div class="button" @click="copyText(i)">复制文案</div>
               <div class="button" @click="saveAll(i)">一键保存</div>
             </div>
           </div>
         </div>
       </div>
     </div>
+    <!--<div class="search">
+      <img src="../../../static/search.png" />
+      <p>分类搜索</p>
+    </div>
+    <view class="section">
+      <view class="section__title">多列选择器</view>
+      <picker mode="multiSelector" @change="bindMultiPickerChange" @columnchange="bindMultiPickerColumnChange" :v-model="multiIndex" :range="multiArray">
+        <view class="picker">
+          当前选择：{{multiArray[0][multiIndex[0]]}}，{{multiArray[1][multiIndex[1]]}}，{{multiArray[2][multiIndex[2]]}}
+        </view>
+      </picker>
+    </view>-->
   </div>
 </template>
 
@@ -88,22 +100,45 @@
     onShow() {},
     methods: {
       async init() {},
-      copyText(info) {
-        let removeTag = info.replace(/<\/?.+?>/g, "");
+      copyText(i) {
+        let removeTag = i.info.replace(/<\/?.+?>/g, "");
         removeTag = removeTag.replace(/&nbsp;/g, "")
         wx.setClipboardData({
           data: removeTag,
-          success(res) {
-            wx.getClipboardData({
-              success(res) {
-                console.log(res.data) // data
-              }
-            })
-          }
+          success(res) {}
         })
       },
-      saveAll() {
-
+      saveAll(item) {
+        let removeTag = item.info.replace(/<\/?.+?>/g, "");
+        removeTag = removeTag.replace(/&nbsp;/g, "")
+        wx.setClipboardData({
+          data: removeTag,
+          success(res) {}
+        })
+        if(item.imgs.length > 0) {
+          item.imgs.forEach(pic => {
+            wx.downloadFile({
+              url: pic, // 仅为示例，并非真实的资源
+              success(res) {
+                // 只要服务器有响应数据，就会把响应内容写入文件并进入 success 回调，业务需要自行判断是否下载到了想要的内容
+                if(res.statusCode === 200) {
+                  console.log('下载成功')
+                }
+              }
+            })
+          })
+        }
+        if(item.video) {
+          wx.downloadFile({
+            url: item.video, // 仅为示例，并非真实的资源
+            success(res) {
+              // 只要服务器有响应数据，就会把响应内容写入文件并进入 success 回调，业务需要自行判断是否下载到了想要的内容
+              if(res.statusCode === 200) {
+                console.log('下载成功')
+              }
+            }
+          })
+        }
       },
       //已经购买过了显示详情
     },
@@ -130,6 +165,38 @@
 
 <style lang="scss">
   .index {
+    .search {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      left: 30rpx;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 100rpx;
+      height: 100rpx;
+      background: #a91c25;
+      color: #FFFFFF;
+      font-size: 20rpx;
+      border-radius: 50%;
+      animation: spoken 3s infinite;
+      img {
+        width: 40rpx;
+        height: 40rpx;
+      }
+    }
+    @keyframes spoken {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.1);
+      }
+      to {
+        transform: scale(1);
+      }
+    }
     .banner {
       position: relative;
       swiper {
@@ -220,10 +287,18 @@
               }
             }
           }
+          .video-box {
+            margin-bottom: 30rpx;
+            video {
+              width: 570rpx;
+              height: 320rpx;
+            }
+          }
           .sub {
             height: 40rpx;
             display: flex;
             justify-content: space-between;
+            align-items: center;
             .time {
               color: #999999;
               font-size: 22rpx;
