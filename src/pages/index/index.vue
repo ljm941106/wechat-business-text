@@ -116,7 +116,16 @@
       }
       let listRes = await fly.get('api/index/getList')
       if(listRes.code == 0) {
-        listRes.data.list.forEach(i => {
+        this.itemDeal(listRes.data.list)
+      }
+      this.render = true
+    },
+    mounted() {},
+    onShow() {},
+    methods: {
+      async init() {},
+      itemDeal(list) {
+        list.forEach(i => {
           //文案处理
           //i.html = i.info.replace(/\s+/g, "<br/>");
           let strContent = i.info;
@@ -129,14 +138,8 @@
           //时间处理
           i.time = formatTime(new Date(i.modtime * 1000)).substring(0, 16)
         })
-        this.list = listRes.data.list
-      }
-      this.render = true
-    },
-    mounted() {},
-    onShow() {},
-    methods: {
-      async init() {},
+        this.list = list
+      },
       async bindMultiPickerChange(e) {
         let value = e.mp.detail.value;
         this.multiIndex = value;
@@ -148,19 +151,7 @@
           type_two: this.filter_type_two,
           type_three: this.filter_type_three
         })
-        listRes.data.list.forEach(i => {
-          //文案处理
-          let strContent = i.info;
-          strContent = strContent.replace(/\r\n/g, '<br/>'); //IE9、FF、chrome
-          strContent = strContent.replace(/\n/g, '<br/>'); //IE7-8
-          strContent = strContent.replace(/\s/g, ' '); //空格处理
-          i.html = strContent;
-          //图片处理
-          i.imgs = i.imgs.split(',');
-          //时间处理
-          i.time = formatTime(new Date(i.modtime * 1000)).substring(0, 16)
-        })
-        this.list = listRes.data.list
+        this.itemDeal(listRes.data.list)
       },
       bindMultiPickerColumnChange(e) {},
       copyText(i) {
@@ -172,32 +163,66 @@
         })
       },
       saveAll(item) {
-        //      let removeTag = item.info.replace(/<\/?.+?>/g, "");
-        //      removeTag = removeTag.replace(/&nbsp;/g, "")
         wx.setClipboardData({
-          data: i.info,
+          data: item.info,
           success(res) {}
         })
-        if(item.imgs.length > 0 && i.pick == 1) {
+        if(item.imgs.length > 0 && item.pick == 1) {
           item.imgs.forEach(pic => {
             wx.downloadFile({
-              url: pic, // 仅为示例，并非真实的资源
-              success(res) {
-                // 只要服务器有响应数据，就会把响应内容写入文件并进入 success 回调，业务需要自行判断是否下载到了想要的内容
-                if(res.statusCode === 200) {
-                  console.log('下载成功')
-                }
+              url: pic,
+              success: function(res) {
+                //图片保存到本地
+                wx.saveImageToPhotosAlbum({
+                  filePath: res.tempFilePath,
+                  success: function(data) {
+                    wx.showToast({
+                      title: '保存成功',
+                      icon: 'success',
+                      duration: 2000
+                    })
+                  },
+                  fail: function(err) {
+                    console.log(err);
+                    if(err.errMsg === "saveImageToPhotosAlbum:fail auth deny") {
+                      console.log("当初用户拒绝，再次发起授权")
+                      wx.openSetting({
+                        success(settingdata) {
+                          console.log(settingdata)
+                          if(settingdata.authSetting['scope.writePhotosAlbum']) {
+                            console.log('获取权限成功，给出再次点击图片保存到相册的提示。')
+                          } else {
+                            console.log('获取权限失败，给出不给权限就无法正常使用的提示')
+                          }
+                        }
+                      })
+                    }
+                  },
+                  complete(res) {
+                    console.log(res);
+                  }
+                })
               }
             })
           })
         }
-        if(item.video && i.pick == 2) {
+        if(item.video && item.pick == 2) {
           wx.downloadFile({
             url: item.video, // 仅为示例，并非真实的资源
             success(res) {
               // 只要服务器有响应数据，就会把响应内容写入文件并进入 success 回调，业务需要自行判断是否下载到了想要的内容
               if(res.statusCode === 200) {
-                console.log('下载成功')
+                //图片保存到本地
+                wx.saveVideoToPhotosAlbum({
+                  filePath: res.tempFilePath,
+                  success: function(data) {
+                    wx.showToast({
+                      title: '保存成功',
+                      icon: 'success',
+                      duration: 2000
+                    })
+                  }
+                })
               }
             }
           })
@@ -227,19 +252,7 @@
         type_two: this.filter_type_two,
         type_three: this.filter_type_three
       })
-      listRes.data.list.forEach(i => {
-        //文案处理
-        let strContent = i.info;
-        strContent = strContent.replace(/\r\n/g, '<br/>'); //IE9、FF、chrome
-        strContent = strContent.replace(/\n/g, '<br/>'); //IE7-8
-        strContent = strContent.replace(/\s/g, ' '); //空格处理
-        i.html = strContent;
-        //图片处理
-        i.imgs = i.imgs.split(',');
-        //时间处理
-        i.time = formatTime(new Date(i.modtime * 1000)).substring(0, 16)
-      })
-      this.list = listRes.data.list
+      this.itemDeal(listRes.data.list)
       this.indexPage = 0;
       wx.hideLoading()
       wx.stopPullDownRefresh()
@@ -254,19 +267,7 @@
           type_three: this.filter_type_three,
           page: this.indexPage
         })
-        listRes.data.list.forEach(i => {
-          //文案处理
-          let strContent = i.info;
-          strContent = strContent.replace(/\r\n/g, '<br/>'); //IE9、FF、chrome
-          strContent = strContent.replace(/\n/g, '<br/>'); //IE7-8
-          strContent = strContent.replace(/\s/g, ' '); //空格处理
-          i.html = strContent;
-          //图片处理
-          i.imgs = i.imgs.split(',');
-          //时间处理
-          i.time = formatTime(new Date(i.modtime * 1000)).substring(0, 16)
-        })
-        this.list = listRes.data.list
+        this.itemDeal(listRes.data.list)
       }
       wx.hideLoading()
     },
