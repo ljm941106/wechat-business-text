@@ -1,13 +1,15 @@
 {
-  "pages": [
-    "pages/loading/main",
-    "pages/index/main",
-    "pages/counter/main"
-  ],
-  "window": {
-    "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#8f8f8f",
-    "navigationBarTitleText": "佑珍",
-    "navigationBarTextStyle": "white"
-  }
+	"pages": [
+		"pages/loading/main",
+		"pages/index/main",
+		"pages/counter/main"
+	],
+	"window": {
+		"backgroundTextStyle": "light",
+		"navigationBarBackgroundColor": "#8f8f8f",
+		"navigationBarTitleText": "佑珍",
+		"navigationBarTextStyle": "white",
+		"onReachBottomDistance": 50,
+		"enablePullDownRefresh": true
+	}
 }
