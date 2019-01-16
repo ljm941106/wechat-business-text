@@ -1,7 +1,8 @@
 <template>
   <div class="loading">
+    <div class="bg"><img src="../../../static/bg.jpg" /></div>
     <img class="logo" src="../../../static/logo.png" />
-    <img class="spoken" src="../../../static/person.png" />
+    <img mode="widthFix" class="spoken" src="../../../static/spoken2.png" />
     <div class="button" @click="gotoIndex">
       点击开启新时代
     </div>
@@ -32,10 +33,21 @@
 
 <style lang="scss">
   .loading {
-    background: #c4c4c4;
     height: 100vh;
     width: 100vw;
     overflow: hidden;
+    .bg {
+      z-index: -1;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100vh;
+      img {
+        width: 100%;
+        height: 100%;
+      }
+    }
     .logo {
       display: block;
       width: 280rpx;
@@ -44,11 +56,9 @@
     }
     .spoken {
       display: block;
-      margin-top: -150rpx;
-      margin-left: -85rpx;
+      margin-top: -50rpx;
       animation: spoken 8s infinite;
-      width: 920rpx;
-      height: 1060rpx;
+      width: 600rpx;
     }
     @keyframes spoken {
       0% {

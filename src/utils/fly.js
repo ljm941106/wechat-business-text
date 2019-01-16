@@ -1,7 +1,7 @@
 var Fly = require('flyio/dist/npm/wx')
 var fly = new Fly()
 
-fly.config.baseURL = ' https://www.zgjiaoli.com/';
+fly.config.baseURL = 'https://www.zgjiaoli.com/';
 
 fly.interceptors.request.use((config, promise) => {
   return config

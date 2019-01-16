@@ -36,12 +36,12 @@
           </div>
           <rich-text class="content" :nodes="i.info">
           </rich-text>
-          <div class="img-list">
+          <div class="img-list" v-if="i.pick==1">
             <div class="img-item" v-for="(i,imgIndex) in i.imgs" :key="imgIndex">
               <img :src="i" />
             </div>
           </div>
-          <div class="video-box">
+          <div class="video-box" v-if="i.pick==2">
             <video class="video" :id="'videoPlay'+index" :src="i.video" loop="true" controls></video>
           </div>
           <div class="sub">
@@ -56,18 +56,15 @@
         </div>
       </div>
     </div>
-    <!--<div class="search">
-      <img src="../../../static/search.png" />
-      <p>分类搜索</p>
-    </div>
+    <div class="no-data" v-if="list.length==0&&render">- - 暂无信息 - -</div>
     <view class="section">
-      <view class="section__title">多列选择器</view>
-      <picker mode="multiSelector" @change="bindMultiPickerChange" @columnchange="bindMultiPickerColumnChange" :v-model="multiIndex" :range="multiArray">
-        <view class="picker">
-          当前选择：{{multiArray[0][multiIndex[0]]}}，{{multiArray[1][multiIndex[1]]}}，{{multiArray[2][multiIndex[2]]}}
-        </view>
+      <picker mode="multiSelector" @change="bindMultiPickerChange" @columnchange="bindMultiPickerColumnChange" :value="multiIndex" :range="multiArray">
+        <div class="search">
+          <img src="../../../static/search.png" />
+          <p>分类搜索</p>
+        </div>
       </picker>
-    </view>-->
+    </view>
   </div>
 </template>
 
@@ -80,12 +77,33 @@
       return {
         imgUrls: [],
         list: [],
+        multiArray: [],
+        multiIndex: [],
+        render: false,
       }
     },
     async created() {
       let confiRes = await fly.get('api/index/getConfig')
       if(confiRes.code == 0) {
         this.imgUrls = confiRes.data.top.split(',')
+        let type1Arr = ['全部'],
+          type2Arr = ['全部'],
+          type3Arr = ['全部'];
+        confiRes.data.type_one.forEach(i => {
+          type1Arr.push(i.name)
+        })
+        confiRes.data.type_two.forEach(i => {
+          type2Arr.push(i.name)
+        })
+        confiRes.data.type_three.forEach(i => {
+          type3Arr.push(i.name)
+        })
+        this.multiArray.push(type1Arr)
+        this.multiArray.push(type2Arr)
+        this.multiArray.push(type3Arr)
+        this.type_oneArr = confiRes.data.type_one
+        this.type_twoArr = confiRes.data.type_two
+        this.type_threeArr = confiRes.data.type_three
       }
       let listRes = await fly.get('api/index/getList')
       if(listRes.code == 0) {
@@ -95,11 +113,27 @@
         })
         this.list = listRes.data.list
       }
+      this.render = true
     },
     mounted() {},
     onShow() {},
     methods: {
       async init() {},
+      async bindMultiPickerChange(e) {
+        let value = e.mp.detail.value;
+        this.multiIndex = value;
+        let listRes = await fly.get('api/index/getList', {
+          type_one: value[0] != 0 ? this.type_oneArr[value[0] - 1].id : 0,
+          type_two: value[1] != 0 ? this.type_oneArr[value[1] - 1].id : 0,
+          type_three: value[2] != 0 ? this.type_oneArr[value[2] - 1].id : 0
+        })
+        listRes.data.list.forEach(i => {
+          i.imgs = i.imgs.split(',');
+          i.time = formatTime(new Date(i.modtime * 1000)).substring(0, 16)
+        })
+        this.list = listRes.data.list
+      },
+      bindMultiPickerColumnChange(e) {},
       copyText(i) {
         let removeTag = i.info.replace(/<\/?.+?>/g, "");
         removeTag = removeTag.replace(/&nbsp;/g, "")
@@ -115,7 +149,7 @@
           data: removeTag,
           success(res) {}
         })
-        if(item.imgs.length > 0) {
+        if(item.imgs.length > 0 && i.pick == 1) {
           item.imgs.forEach(pic => {
             wx.downloadFile({
               url: pic, // 仅为示例，并非真实的资源
@@ -128,7 +162,7 @@
             })
           })
         }
-        if(item.video) {
+        if(item.video && i.pick == 2) {
           wx.downloadFile({
             url: item.video, // 仅为示例，并非真实的资源
             success(res) {
@@ -196,6 +230,10 @@
       to {
         transform: scale(1);
       }
+    }
+    .no-data {
+      text-align: center;
+      color: #999999;
     }
     .banner {
       position: relative;
@@ -288,6 +326,7 @@
             }
           }
           .video-box {
+            margin-top: 20rpx;
             margin-bottom: 30rpx;
             video {
               width: 570rpx;
