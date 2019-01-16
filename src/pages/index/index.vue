@@ -34,7 +34,7 @@
               </div>
             </div>
           </div>
-          <rich-text class="content" :nodes="i.info">
+          <rich-text class="content" :nodes="i.html">
           </rich-text>
           <div class="img-list" v-if="i.pick==1">
             <div class="img-item" v-for="(i,imgIndex) in i.imgs" :key="imgIndex">
@@ -80,12 +80,20 @@
         multiArray: [],
         multiIndex: [],
         render: false,
+        //筛选
+        filter_type_one: 0,
+        filter_type_two: 0,
+        filter_type_three: 0,
+        //分页
+        indexPage: 1,
       }
     },
     async created() {
       let confiRes = await fly.get('api/index/getConfig')
       if(confiRes.code == 0) {
+        //图片处理
         this.imgUrls = confiRes.data.top.split(',')
+        //筛选处理
         let type1Arr = ['全部'],
           type2Arr = ['全部'],
           type3Arr = ['全部'];
@@ -104,11 +112,21 @@
         this.type_oneArr = confiRes.data.type_one
         this.type_twoArr = confiRes.data.type_two
         this.type_threeArr = confiRes.data.type_three
+
       }
       let listRes = await fly.get('api/index/getList')
       if(listRes.code == 0) {
         listRes.data.list.forEach(i => {
+          //文案处理
+          //i.html = i.info.replace(/\s+/g, "<br/>");
+          let strContent = i.info;
+          strContent = strContent.replace(/\r\n/g, '<br/>'); //IE9、FF、chrome
+          strContent = strContent.replace(/\n/g, '<br/>'); //IE7-8
+          strContent = strContent.replace(/\s/g, ' '); //空格处理
+          i.html = strContent;
+          //图片处理
           i.imgs = i.imgs.split(',');
+          //时间处理
           i.time = formatTime(new Date(i.modtime * 1000)).substring(0, 16)
         })
         this.list = listRes.data.list
@@ -122,31 +140,42 @@
       async bindMultiPickerChange(e) {
         let value = e.mp.detail.value;
         this.multiIndex = value;
+        this.filter_type_one = value[0] != 0 ? this.type_oneArr[value[0] - 1].id : 0;
+        this.filter_type_two = value[1] != 0 ? this.type_twoArr[value[1] - 1].id : 0;
+        this.filter_type_three = value[2] != 0 ? this.type_threeArr[value[2] - 1].id : 0;
         let listRes = await fly.get('api/index/getList', {
-          type_one: value[0] != 0 ? this.type_oneArr[value[0] - 1].id : 0,
-          type_two: value[1] != 0 ? this.type_oneArr[value[1] - 1].id : 0,
-          type_three: value[2] != 0 ? this.type_oneArr[value[2] - 1].id : 0
+          type_one: this.filter_type_one,
+          type_two: this.filter_type_two,
+          type_three: this.filter_type_three
         })
         listRes.data.list.forEach(i => {
+          //文案处理
+          let strContent = i.info;
+          strContent = strContent.replace(/\r\n/g, '<br/>'); //IE9、FF、chrome
+          strContent = strContent.replace(/\n/g, '<br/>'); //IE7-8
+          strContent = strContent.replace(/\s/g, ' '); //空格处理
+          i.html = strContent;
+          //图片处理
           i.imgs = i.imgs.split(',');
+          //时间处理
           i.time = formatTime(new Date(i.modtime * 1000)).substring(0, 16)
         })
         this.list = listRes.data.list
       },
       bindMultiPickerColumnChange(e) {},
       copyText(i) {
-        let removeTag = i.info.replace(/<\/?.+?>/g, "");
-        removeTag = removeTag.replace(/&nbsp;/g, "")
+        //      let removeTag = i.info.replace(/<\/?.+?>/g, "");
+        //      let removeTag = removeTag.replace(/&nbsp;/g, "")
         wx.setClipboardData({
-          data: removeTag,
+          data: i.info,
           success(res) {}
         })
       },
       saveAll(item) {
-        let removeTag = item.info.replace(/<\/?.+?>/g, "");
-        removeTag = removeTag.replace(/&nbsp;/g, "")
+        //      let removeTag = item.info.replace(/<\/?.+?>/g, "");
+        //      removeTag = removeTag.replace(/&nbsp;/g, "")
         wx.setClipboardData({
-          data: removeTag,
+          data: i.info,
           success(res) {}
         })
         if(item.imgs.length > 0 && i.pick == 1) {
@@ -191,8 +220,55 @@
         }
       }
     },
-    onPullDownRefresh() {
+    async onPullDownRefresh() {
+      wx.showLoading();
+      let listRes = await fly.get('api/index/getList', {
+        type_one: this.filter_type_one,
+        type_two: this.filter_type_two,
+        type_three: this.filter_type_three
+      })
+      listRes.data.list.forEach(i => {
+        //文案处理
+        let strContent = i.info;
+        strContent = strContent.replace(/\r\n/g, '<br/>'); //IE9、FF、chrome
+        strContent = strContent.replace(/\n/g, '<br/>'); //IE7-8
+        strContent = strContent.replace(/\s/g, ' '); //空格处理
+        i.html = strContent;
+        //图片处理
+        i.imgs = i.imgs.split(',');
+        //时间处理
+        i.time = formatTime(new Date(i.modtime * 1000)).substring(0, 16)
+      })
+      this.list = listRes.data.list
+      this.indexPage = 0;
+      wx.hideLoading()
       wx.stopPullDownRefresh()
+    },
+    async onReachBottom() {
+      wx.showLoading()
+      if(this.list.length % 20 == 0) {
+        this.indexPage++;
+        let listRes = await fly.get('api/index/getList', {
+          type_one: this.filter_type_one,
+          type_two: this.filter_type_two,
+          type_three: this.filter_type_three,
+          page: this.indexPage
+        })
+        listRes.data.list.forEach(i => {
+          //文案处理
+          let strContent = i.info;
+          strContent = strContent.replace(/\r\n/g, '<br/>'); //IE9、FF、chrome
+          strContent = strContent.replace(/\n/g, '<br/>'); //IE7-8
+          strContent = strContent.replace(/\s/g, ' '); //空格处理
+          i.html = strContent;
+          //图片处理
+          i.imgs = i.imgs.split(',');
+          //时间处理
+          i.time = formatTime(new Date(i.modtime * 1000)).substring(0, 16)
+        })
+        this.list = listRes.data.list
+      }
+      wx.hideLoading()
     },
   }
 </script>
@@ -281,15 +357,16 @@
         .detail {
           width: 570rpx;
           .title {
-            height: 60rpx;
+            min-height: 60rpx;
             align-items: center;
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
             .nickname {
               color: #a91c25;
-              line-height: 60rpx;
             }
             .tags {
+              padding: 10rpx 0;
               display: flex;
               justify-content: flex-end;
               .tag {
