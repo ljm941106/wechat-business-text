@@ -4,10 +4,10 @@
     <!--<div class="black"></div>-->
     <img mode="widthFix" class="black" src="../../../static/black.png" />
     <div class="spoken-text">
-      <div class="line2">影视巨星</div>
-      <div class="line1">佑珍代言人</div>
+    	<div class="line1">佑珍代言人</div>
+      <div class="line2">影视巨星<br/>:黄圣依</div>
     </div>
-    <img class="sign" mode="widthFix" src="../../../dist/wx/static/sign.png" />
+    <img class="sign" mode="widthFix" src="../../../static/sign.png" />
     <img mode="widthFix" class="logo" src="../../../static/logo.png" />
     <img mode="widthFix" class="spoken" src="../../../static/spoken2.png" />
     <img mode="widthFix" class="product" src="../../../static/product.png" />
@@ -49,26 +49,26 @@
       display: flex;
       flex-wrap: wrap;
       position: absolute;
-      left: 100rpx;
-      top: 180rpx;
+      left: 80rpx;
+      top: 120rpx;
       .line1 {
+      	padding: 0 5rpx;
         width: 1em;
-        font-family: "楷体";
         font-size: 28rpx;
       }
       .line2 {
         margin-top: 3em;
         margin-right: 5rpx;
         width: 1em;
-        line-height: 1.5em;
-        font-size: 22rpx;
+        font-size: 28rpx;
+        text-align: center;
       }
     }
     .sign{
     	position: absolute;
-    	top: 380rpx;
-    	left: 65rpx;
-    	width: 120rpx;
+    	top: 500rpx;
+    	left:30rpx;
+    	width: 180rpx;
     }
     .bg {
       z-index: -1;

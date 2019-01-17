@@ -267,7 +267,20 @@
           type_three: this.filter_type_three,
           page: this.indexPage
         })
-        this.itemDeal(listRes.data.list)
+        listRes.data.list.forEach(i => {
+          //文案处理
+          //i.html = i.info.replace(/\s+/g, "<br/>");
+          let strContent = i.info;
+          strContent = strContent.replace(/\r\n/g, '<br/>'); //IE9、FF、chrome
+          strContent = strContent.replace(/\n/g, '<br/>'); //IE7-8
+          strContent = strContent.replace(/\s/g, ' '); //空格处理
+          i.html = strContent;
+          //图片处理
+          i.imgs = i.imgs.split(',');
+          //时间处理
+          i.time = formatTime(new Date(i.modtime * 1000)).substring(0, 16)
+        })
+        this.list = this.list.concat(listRes.data.list)
       }
       wx.hideLoading()
     },
