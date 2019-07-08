@@ -31,7 +31,7 @@
           <rich-text class="content" :nodes="i.html"></rich-text>
           <div class="img-list" v-if="i.pick==1">
             <div class="img-item" v-for="(img,imgIndex) in i.imgs" :key="imgIndex" @click="previewItem(img,i.imgs)">
-              <img :src="img">
+              <img :src="img" lazy-load mode="widthFix">
             </div>
           </div>
           <div class="video-box" v-if="i.pick==2">
@@ -399,8 +399,6 @@ export default {
             }
           }
         }
-        .content {
-        }
         .img-list {
           margin-top: 20rpx;
           display: flex;
@@ -410,12 +408,13 @@ export default {
             height: 170rpx;
             margin-right: 30rpx;
             margin-bottom: 30rpx;
+            overflow: hidden;
             &:nth-child(3n) {
               margin-right: 0;
             }
             img {
               width: 100%;
-              height: 100%;
+              height: auto;
             }
           }
         }
